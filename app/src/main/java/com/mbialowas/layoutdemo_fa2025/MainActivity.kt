@@ -1,15 +1,27 @@
 package com.mbialowas.layoutdemo_fa2025
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.provider.AlarmClock
+import android.provider.ContactsContract
+import android.provider.MediaStore
 import android.widget.Button
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
+
 class MainActivity : AppCompatActivity() {
+
+    private val calledNumbers = arrayListOf<String>() // listed to track phone numbers
+    val CALL_REQUEST_CODE = 1
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -25,6 +37,9 @@ class MainActivity : AppCompatActivity() {
         val btnVertical:Button = findViewById<Button>(R.id.btn_vertical)
         val btnRelative:Button = findViewById<Button>(R.id.btn_relative)
         val btnConstraint: Button = findViewById<Button>(R.id.btn_constraint)
+
+        // passing control to a different app
+        val btnApp: Button = findViewById<Button>(R.id.btn_app)
 
         btnVertical.setOnClickListener {
             Toast.makeText(
@@ -45,5 +60,84 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, ConstraintActivity::class.java)
             startActivity(intent)
         }
+        btnApp.setOnClickListener {
+            val intent = Intent(Intent.ACTION_VIEW).apply{
+                data = Uri.parse("https://cnn.com")
+            }
+            startActivity(intent)
+        }
+        initialize()
+    }
+    private fun initialize(){
+        val callButton = findViewById<Button>(R.id.btn_phone)
+        val callLogButton = findViewById<Button>(R.id.btn_call_log)
+        val contactsButton = findViewById<Button>(R.id.btn_contacts)
+        val galleryButton = findViewById<Button>(R.id.btn_photo)
+        val cameraButton = findViewById<Button>(R.id.btn_camera)
+        val alarmButton = findViewById<Button>(R.id.btn_alarm)
+
+        contactsButton.setOnClickListener { contactsButton() }
+        callButton.setOnClickListener { callButton() }
+        galleryButton.setOnClickListener { galleryButton() }
+        callLogButton.setOnClickListener { callLogButton() }
+        cameraButton.setOnClickListener { cameraButton() }
+        alarmButton.setOnClickListener { alarmButton() }
+
+
+    }
+    private fun contactsButton(){
+        val intent = Intent(Intent.ACTION_PICK)
+        intent.type = ContactsContract.Contacts.CONTENT_TYPE
+        startActivity(intent)
+    }
+
+    private fun cameraButton(){
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        startActivity(intent)
+    }
+    private fun alarmButton(){
+        val intent = Intent(AlarmClock.ACTION_SHOW_ALARMS)
+        startActivity(intent)
+    }
+    private fun galleryButton(){
+        val intents = Intent(Intent.ACTION_VIEW)
+        intent.data = Uri.parse("content://media/external/images/media")
+    }
+    private fun callButton(){
+        calledNumbers.add("+14311234567")
+        calledNumbers.add("+14311234567")
+        calledNumbers.add("+14312222222")
+        calledNumbers.add("+14313333333")
+        calledNumbers.add("+14314444444")
+        calledNumbers.add("+14315555555")
+
+        val phoneNumber:String = "+3636387563"
+        makePhoneCall(phoneNumber)
+    }
+
+    private fun makePhoneCall(phoneNumber: String) {
+        if(ContextCompat.checkSelfPermission(
+            this,
+                Manifest.permission.CALL_PHONE
+        ) == PackageManager.PERMISSION_GRANTED
+        ){
+            // permission is granted, proceed the phone call
+            val callIntent = Intent(Intent.ACTION_CALL)
+            callIntent.data = Uri.parse("tel:$phoneNumber")
+            startActivity(callIntent)
+        }else{
+            // request the call_PHONE permission
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.CALL_PHONE),
+                CALL_REQUEST_CODE
+            )
+        }
+    }
+    // open call log
+    private fun callLogButton(){
+        val intent = Intent(this, CallLogActivity::class.java)
+        intent.putStringArrayListExtra("phoneNumbers", calledNumbers)
+        startActivity(intent)
     }
 }
